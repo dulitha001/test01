@@ -1,0 +1,43 @@
+trigger:
+  - main # Automatically triggers pipeline on commits to the main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  MAVEN_OPTS: '-Xmx1024m' # Sets Maven options (optional)
+
+steps:
+  # Step 1: Check out code from the repository
+  - task: Checkout@1
+    displayName: 'Check out code from repository'
+
+  # Step 2: Set up JDK for Maven
+  - task: UseJavaVersion@1
+    inputs:
+      versionSpec: '11' # Java version (change to your project's JDK version)
+      jdkArchitecture: 'x64'
+    displayName: 'Set up JDK 11'
+
+  # Step 3: Build the Maven project
+  - task: Maven@3
+    inputs:
+      mavenPomFile: 'pom.xml' # Path to pom.xml
+      mavenOptions: '-Xmx1024m'
+      goals: 'clean install'
+    displayName: 'Build and test project with Maven'
+
+  # Step 4: Publish build artifacts
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/target' # Path to Maven's output directory
+      artifact: 'maven-artifacts'
+    displayName: 'Publish Maven build artifacts'
+
+  # Step 5: Deploy the application (CD)
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: '<Your-Service-Connection>'
+      appName: '<Your-WebApp-Name>'
+      package: '$(System.DefaultWorkingDirectory)/target/*.war' # WAR/JAR file for deployment
+    displayName: 'Deploy to Azure Web App'
