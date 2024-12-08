@@ -12,11 +12,12 @@ steps:
   - task: Checkout@1
     displayName: 'Check out code from repository'
 
-  # Step 2: Set up JDK for Maven
-  - task: UseJavaVersion@1
-    inputs:
-      versionSpec: '11' # Java version (change to your project's JDK version)
-      jdkArchitecture: 'x64'
+  # Step 2: Set up JDK using an environment variable
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y openjdk-11-jdk
+      echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $GITHUB_ENV
+      echo "PATH=$JAVA_HOME/bin:$PATH" >> $GITHUB_ENV
     displayName: 'Set up JDK 11'
 
   # Step 3: Build the Maven project
